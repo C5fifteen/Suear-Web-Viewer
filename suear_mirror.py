@@ -15,6 +15,7 @@ import socket
 import ssl
 import sys
 import time
+import cv2
 
 from io import BytesIO
 
@@ -185,7 +186,8 @@ class HttpHandler(http.server.BaseHTTPRequestHandler):
                 frame = suear_client.get_frame()
                 if frame is None:
                     continue
-                
+                flipped_frame = cv2.flip(frame.data, 1)  # 1 indicates horizontal flip
+
                 self.end_headers()
                 self.wfile.write(self.__class__.BOUNDARY)
                 self.end_headers()
@@ -205,6 +207,8 @@ class HttpHandler(http.server.BaseHTTPRequestHandler):
                 suear_client.stream_sock.close()
             suear_client.stream_sock = None
         return
+
+        
 
 
 class JpgFrame:
