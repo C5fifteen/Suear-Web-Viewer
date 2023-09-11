@@ -186,8 +186,10 @@ class HttpHandler(http.server.BaseHTTPRequestHandler):
                 frame = suear_client.get_frame()
                 if frame is None:
                     continue
-                flipped_frame = cv2.flip(frame.data, 1)  # 1 indicates horizontal flip
-
+                
+                flipped_frame = cv2.flip(frame.data, 1)    #  horizontal flip
+                mirrored_frame = cv2.flip(frame.data, -1)    # -1 indicates both horizontal and vertical flip
+                
                 self.end_headers()
                 self.wfile.write(self.__class__.BOUNDARY)
                 self.end_headers()
