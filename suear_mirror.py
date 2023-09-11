@@ -56,36 +56,28 @@ class HttpHandler(http.server.BaseHTTPRequestHandler):
 
 
     def stabilize_frame(self, frame):
-        # Initialize variables for frame and previous frame
+        # Calculate the rotation angle based on the optical flow
         if not hasattr(self, 'prev_frame'):
             self.prev_frame = frame.copy()
             self.prev_gray = cv2.cvtColor(self.prev_frame, cv2.COLOR_BGR2GRAY)
             return frame
 
-        # Convert the current frame to grayscale
         frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # Calculate optical flow (movement) between frames
         optical_flow = cv2.calcOpticalFlowPyrLK(self.prev_gray, frame_gray, None, None, **lk_params)
-
-        # Extract the calculated optical flow
         flow_x, flow_y = optical_flow[0].T
-
-        # Calculate the transformation matrix based on the optical flow
         dx = flow_x.mean()
         dy = flow_y.mean()
-        rotation_matrix = cv2.getRotationMatrix2D((frame.shape[1] / 2, frame.shape[0] / 2), 0, 1)
-        translation_matrix = np.float32([[1, 0, -dx], [0, 1, -dy]])
-        transform_matrix = translation_matrix.dot(rotation_matrix)
 
-        # Apply the transformation to stabilize the frame
-        stabilized_frame = cv2.warpAffine(frame, transform_matrix, (frame.shape[1], frame.shape[0]))
+        rotation_angle = np.arctan2(dy, dx) * 180 / np.pi  # Calculate the rotation angle in degrees
 
-        # Update the previous frame and grayscale frame
+        # Apply an inverse rotation to stabilize the frame
+        rotation_matrix = cv2.getRotationMatrix2D((frame.shape[1] / 2, frame.shape[0] / 2), -rotation_angle, 1)
+        stabilized_frame = cv2.warpAffine(frame, rotation_matrix, (frame.shape[1], frame.shape[0]))
+
         self.prev_gray = frame_gray.copy()
 
         return stabilized_frame
-
     
     
     def do_GET(self):
